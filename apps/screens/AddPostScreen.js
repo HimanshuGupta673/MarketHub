@@ -1,16 +1,19 @@
-import { View, Text, TextInput, Button, TouchableOpacity, ToastAndroid, StyleSheet, Image, SafeAreaView, ScrollView, KeyboardAvoidingView } from 'react-native'
+import { View, Text, TextInput, Button, TouchableOpacity, ToastAndroid, StyleSheet, Image, SafeAreaView, ScrollView, KeyboardAvoidingView, Alert, ActivityIndicator } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { app } from '../../FirebaseConfig'
-import { collection, getDocs, getFirestore } from "firebase/firestore";
+import { addDoc, collection, getDocs, getFirestore } from "firebase/firestore";
 import { Formik } from 'formik';
 import { Picker } from '@react-native-picker/picker';
-
+import { getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
 import * as ImagePicker from 'expo-image-picker';
-
+import { useUser } from '@clerk/clerk-expo';
 export default function AddPostScreen() {
+  const storage = getStorage();
   const [image, setImage] = useState(null);
   const db = getFirestore(app);
   const [categoryList, setCategoryList] = useState([]);
+  const {user} = useUser();
+  const [loading,setLoading] = useState(false);
 
   const pickImage = async () => {
     // No permissions request is necessary for launching the image library
@@ -44,17 +47,42 @@ export default function AddPostScreen() {
     }
   };
 
-  const onSumbitMethod = (value) => {
-    value.image = image
-    console.log(value)
-  }
+  const onSumbitMethod = async(value,resetForm ) => {
+    setLoading(true)
+    // convert uri into blob file
+    const resp = await fetch(image)
+    const blob = await resp.blob();
+    const storageRef = ref(storage,'communityPost/'+Date.now()+".jpg");
 
+    uploadBytes(storageRef, blob).then((snapshot) => {
+      console.log('Uploaded a blob or file!');
+    }).then((resp)=>{
+      getDownloadURL(storageRef).then(async(downloadUrl)=>{
+        value.image = downloadUrl;
+        value.userName = user.fullName;
+        value.userEmail = user.primaryEmailAddress.emailAddress;
+        value.userImage = user.imageUrl;
+        const docRef = await addDoc(collection(db, "UserPost"),value)
+        if(docRef.id){
+          setLoading(false)
+          Alert.alert("Success!","Post added successfylly")
+          resetForm();
+          setImage(null);
+        }
+      })
+    })
+    .catch((error) => {
+      console.error("Error uploading post:", error);
+      setLoading(false); // Make sure to stop loading state if there's an error
+      Alert.alert("Error", "Failed to upload post. Please try again.");
+    });
+  }
   return (
     <View contentContainerStyle={{ flexGrow: 1 }} className="p-10 min-h-[100vh]">
       <Text className="text-[27px] font-bold">Add New Post</Text>
       <Text className="text-[16px] text-gray-500 mb-7">Create New Post and Start Selling</Text>
-      <Formik initialValues={{ title: '', desc: '', category: '', address: '', price: '', image: '' }}
-        onSubmit={value => onSumbitMethod(value)}
+      <Formik initialValues={{ title: '', desc: '', category: '', address: '', price: '', image: '',userName:'',userEmail:'',userImage:'',createdAt:Date.now()}}
+        onSubmit={(values, { resetForm }) => onSumbitMethod(values, resetForm)}
         validate={(values) => {
           const errors = {}
           if (!values.title) {
@@ -134,8 +162,14 @@ export default function AddPostScreen() {
                     }
                   </Picker>
                 </View>
-                <TouchableOpacity onPress={handleSubmit} className="p-4 bg-blue-500 mt-10">
-                  <Text className="text-white text-center text-[16px]">Submit</Text>
+                <TouchableOpacity disabled={loading} style={{backgroundColor:loading?'#ccc':'#007BFF'}} onPress={handleSubmit} className="p-4 bg-blue-500 mt-10">
+                  {
+                    loading?
+                    <ActivityIndicator color='#fff' />
+                    :
+                    <Text className="text-white text-center text-[16px]">Submit</Text>
+
+                  }
                 </TouchableOpacity>
               </ScrollView>
             </KeyboardAvoidingView>
