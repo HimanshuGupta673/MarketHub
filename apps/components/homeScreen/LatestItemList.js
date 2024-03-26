@@ -2,7 +2,7 @@ import { View, Text, FlatList, TouchableOpacity } from 'react-native'
 import React from 'react'
 import PostItem from './PostItem'
 
-export default function LatestItemList({latestItemList}) {
+export default function LatestItemList({latestItemList,heading}) {
   return (
     <View className="mt-3 mb-12">
        <Text className="font-bold text-[20px]">Latest Items</Text>

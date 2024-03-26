@@ -9,6 +9,7 @@ import { Entypo } from '@expo/vector-icons';
 import { AntDesign } from '@expo/vector-icons';
 import { Feather } from '@expo/vector-icons';
 import { Ionicons } from '@expo/vector-icons';
+import HomeScreenStackNavigation from './HomeScreenStackNavigation';
 
 export default function TabNavigation() {
     const Tab = createBottomTabNavigator();
@@ -17,7 +18,9 @@ export default function TabNavigation() {
         headerShown:false,
         tabBarActiveTintColor:'#000'
     }}>
-        <Tab.Screen name='home' component={HomeScreen} options={{
+        <Tab.Screen name='home' component={HomeScreenStackNavigation} options={{
+            
+            headerShown:false,
             tabBarLabel:({color})=>(
                 <Text style={{color:color,fontSize:12,marginBottom:3}}>Home</Text>
             ),
