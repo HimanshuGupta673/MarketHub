@@ -5,6 +5,7 @@ import { ClerkProvider, SignedIn, SignedOut } from '@clerk/clerk-expo';
 import HomeScreen from './apps/screens/HomeScreen';
 import { NavigationContainer } from '@react-navigation/native';
 import TabNavigation from './apps/navigation/TabNavigation';
+import 'react-native-gesture-handler';
 
 export default function App() {
   return (

@@ -1,6 +1,7 @@
 {
   "expo": {
     "name": "MarketHub",
+    "scheme": "myapp",
     "slug": "MarketHub",
     "version": "1.0.0",
     "orientation": "portrait",

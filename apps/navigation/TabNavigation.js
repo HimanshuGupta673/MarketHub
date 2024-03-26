@@ -10,6 +10,8 @@ import { AntDesign } from '@expo/vector-icons';
 import { Feather } from '@expo/vector-icons';
 import { Ionicons } from '@expo/vector-icons';
 import HomeScreenStackNavigation from './HomeScreenStackNavigation';
+import ExploreScreenStackNavigation from './ExploreScreenStackNavigation';
+import ProfileScreenStackScreen from './ProfileScreenStackScreen';
 
 export default function TabNavigation() {
     const Tab = createBottomTabNavigator();
@@ -28,7 +30,7 @@ export default function TabNavigation() {
                 <AntDesign name="home" size={24} color="black" />
             )
         }}/>
-        <Tab.Screen name='explore' component={ExploreScreen} options={{
+        <Tab.Screen name='explore' component={ExploreScreenStackNavigation} options={{
             tabBarLabel:({color})=>(
                 <Text style={{color:color,fontSize:12,marginBottom:3}}>Explore</Text>
             ),
@@ -44,7 +46,7 @@ export default function TabNavigation() {
                 <Feather name="camera" size={24} color="black" />
             )
         }}/>
-        <Tab.Screen name='profile' component={ProfileScreen} options={{
+        <Tab.Screen name='profile' component={ProfileScreenStackScreen} options={{
             tabBarLabel:({color})=>(
                 <Text style={{color:color,fontSize:12,marginBottom:3}}>Profile</Text>
             ),

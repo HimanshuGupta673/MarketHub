@@ -1,39 +1,71 @@
-import { View, Text, Image, ScrollView, TouchableOpacity, Linking, Share } from 'react-native'
+import { View, Text, Image, ScrollView, TouchableOpacity, Linking, Share, Alert } from 'react-native'
 import React, { useEffect, useState } from 'react'
-import { useRoute } from '@react-navigation/native'
+import { useNavigation, useRoute } from '@react-navigation/native'
 import { AntDesign } from '@expo/vector-icons';
+import { useUser } from '@clerk/clerk-expo';
+import { collection, deleteDoc, getDocs, getFirestore, query, where } from 'firebase/firestore';
+import { app } from '../../FirebaseConfig';
 export default function ProductDetail({ navigation }) {
     const { params } = useRoute();
     const [product, setProducts] = useState([]);
+    const { user } = useUser();
+    const db = getFirestore(app);
+    const nav = useNavigation()
 
     useEffect(() => {
         params && setProducts(params.product)
         shareButton();
-    },[[params,navigation]])
+    }, [[params, navigation]])
 
     const sendEmail = () => {
-        const subject = 'Regarding' + product.title;
-        const body = "Hi " + product.userName + "\n" + "I am interested in this product"
-        Linking.openURL('mailto:' + product.userEmail + "?" + subject + "&body=" + body);
+        try {
+            const subject = 'Regarding' + product.title;
+            const body = "Hi " + product.userName + "\n" + "I am interested in this product"
+            Linking.openURL('mailto:' + product.userEmail + "?" + subject + "&body=" + body);
+        } catch (e) {
+            console.log(e)
+        }
     }
 
     const shareButton = () => {
         navigation.setOptions({
             headerRight: () => (
-                <AntDesign onPress={()=>shareProduct()} style={{marginRight:15}} name="sharealt" size={24} color="white" />
+                <AntDesign onPress={() => shareProduct()} style={{ marginRight: 15 }} name="sharealt" size={24} color="white" />
             )
         })
     }
 
-    const shareProduct = () =>{
+    const shareProduct = () => {
         const content = {
-            message:product?.title+"\n"+product?.desc,
+            message: product?.title + "\n" + product?.desc,
         }
         Share.share(content)
-        .then(resp=>{
-            console.log(resp)
-        },(error)=>{
-            console.log(error)
+            .then(resp => {
+                console.log(resp)
+            }, (error) => {
+                console.log(error)
+            })
+    }
+    const deleteUserPost = () => {
+        Alert.alert('Do you want to delete?', "Are you want to delete this post?", [
+            {
+                text: 'Yes',
+                onPress: () => deleteFromFirestore()
+            },
+            {
+                text: 'Cancel',
+                onPress: () => console.log("Cancel Pressed")
+            },
+        ])
+    }
+    const deleteFromFirestore = async () => {
+        const q = query(collection(db, 'UserPost'), where('title', '==', product.title))
+        const snapshot = await getDocs(q);
+        snapshot.forEach(doc => {
+            deleteDoc(doc.ref).then(resp => {
+                console.log("Deleted the doc...")
+                nav.goBack();
+            })
         })
     }
     return (
@@ -58,9 +90,17 @@ export default function ProductDetail({ navigation }) {
                 </View>
             </View>
 
-            <TouchableOpacity onPress={() => sendEmail()} className="z-40 bg-blue-500 rounded-full p-4 m-2">
-                <Text className="text-center text-white">Send Message</Text>
-            </TouchableOpacity>
+
+            {
+                user.primaryEmailAddress.emailAddress == product.userEmail ?
+                    <TouchableOpacity onPress={() => deleteUserPost()} className="z-40 bg-red-500 rounded-full p-4 m-2">
+                        <Text className="text-center text-white">Delete Post</Text>
+                    </TouchableOpacity>
+                    :
+                    <TouchableOpacity onPress={() => sendEmail()} className="z-40 bg-blue-500 rounded-full p-4 m-2">
+                        <Text className="text-center text-white">Send Message</Text>
+                    </TouchableOpacity>
+            }
 
         </ScrollView>
     )
