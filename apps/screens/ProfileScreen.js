@@ -1,10 +1,10 @@
 import { View, Text,Image, FlatList, TouchableOpacity } from 'react-native'
 import React from 'react'
-import { useAuth, useUser } from '@clerk/clerk-expo'
+import {  useClerk, useUser } from '@clerk/clerk-expo'
 import { useNavigation } from '@react-navigation/native';
 
 export default function ProfileScreen() {
-  // const [isLoaded,signOut] = useAuth()
+  const { signOut } = useClerk();
   const {user} = useUser();
   const navigation = useNavigation();
   const menuList = [
